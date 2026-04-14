@@ -1,0 +1,38 @@
+# docker-compose.cabinet.yml лежит в КОРНЕ репозитория бота, не в этой папке. Из каталога cabinet его не видно.
+#
+# С корня /opt/remnawave-bedolaga-telegram-bot:
+#   docker compose -f docker-compose.yml -f docker-compose.cabinet.yml up -d --build
+#
+# Или только кабинет (та же сеть бота, имя контейнера remnawave_cabinet — как ждёт внешний nginx):
+#   cd cabinet && docker compose up -d --build
+
+services:
+  cabinet-frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        VITE_API_URL: ${VITE_API_URL:-/api}
+        VITE_TELEGRAM_BOT_USERNAME: ${VITE_TELEGRAM_BOT_USERNAME}
+        VITE_APP_NAME: ${VITE_APP_NAME:-Cabinet}
+        VITE_APP_LOGO: ${VITE_APP_LOGO:-V}
+    container_name: remnawave_cabinet
+    restart: unless-stopped
+    env_file:
+      - .env
+    ports:
+      - '${CABINET_PORT:-3020}:80'
+    networks:
+      - default
+      - bot_network
+    healthcheck:
+      test: ['CMD', 'curl', '-fsS', 'http://127.0.0.1/']
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+
+networks:
+  bot_network:
+    name: remnawave-bedolaga-telegram-bot_bot_network
+    external: true
