@@ -1,0 +1,27 @@
+# Личный кабинет (статика в nginx:alpine). Подключается к основному compose.
+# Запускать из КОРНЯ репозитория бота (рядом с этим файлом), не из каталога cabinet/.
+#
+# Сборка и запуск:
+#   cd /opt/remnawave-bedolaga-telegram-bot
+#   docker compose -f docker-compose.yml -f docker-compose.cabinet.yml up -d --build
+#
+# Переменные (в .env или окружении): CABINET_VITE_* — см. cabinet/.env.example
+#
+# Внешний nginx (cabinet.netcorehub.ru): вместо root /srv/cabinet проксируйте / на
+#   http://remnawave_cabinet:80 — контейнер должен быть в той же Docker-сети, что и remnawave-nginx.
+
+services:
+  cabinet:
+    build:
+      context: ./cabinet
+      dockerfile: Dockerfile
+      args:
+        VITE_API_URL: /api
+        VITE_TELEGRAM_BOT_USERNAME: ${CABINET_VITE_TELEGRAM_BOT_USERNAME:-}
+        VITE_APP_NAME: ${CABINET_VITE_APP_NAME:-VPN Cabinet}
+        VITE_APP_LOGO: ${CABINET_VITE_APP_LOGO:-V}
+    image: remnawave-cabinet-frontend:latest
+    container_name: remnawave_cabinet
+    restart: unless-stopped
+    networks:
+      - bot_network
